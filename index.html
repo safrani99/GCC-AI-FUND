@@ -1,0 +1,892 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GCC Active Fund | Mohammad AlSafran</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="d3.min.js"></script>
+<style>
+:root{--font-anthropic-sans:Figtree,"Segoe UI",Tahoma,Arial,sans-serif;--font-anthropic-serif:Figtree,"Segoe UI",Tahoma,Arial,sans-serif;
+--cds-gap-xs:4px;--cds-gap-sm:8px;--cds-gap-md:12px;--cds-gap-lg:16px;--cds-gap-xl:28px;
+--cds-pad-xs:4px;--cds-pad-sm:8px;--cds-pad-md:12px;--cds-pad-lg:18px;--cds-pad-xl:28px;
+--cds-font-size-caption:12px;--cds-font-size-body:14px;--cds-font-size-heading:18px;--cds-font-size-title:30px;--cds-font-weight-medium:500;
+--cds-radius:0;--cds-dur-slow:300ms;--cds-ease-out:cubic-bezier(.2,.8,.2,1);
+--color-fg:#fff;--color-fg-muted:rgba(255,255,255,.72);--color-bg:#050504;--color-panel:rgba(255,255,255,.05);--color-border-line:rgba(255,255,255,.18);--color-ok:#8CCFAE;--color-bad:#E58B7C;--color-warn:#D8B878;
+--cds-surface-popover:#212121;--cds-border:rgba(255,255,255,.18);--cds-shadow-popover:0 8px 24px rgba(0,0,0,.5);--cds-text-secondary:rgba(255,255,255,.72);--cds-chart-grid:rgba(255,255,255,.08);--cds-chart-axis:rgba(255,255,255,.34);--cds-chart-muted:rgba(255,255,255,.45)}
+html,body{margin:0;background:#050504;color:#fff;font-family:var(--font-anthropic-sans);font-size:14px;-webkit-text-size-adjust:100%}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+.dash-select{appearance:none;padding:4px 24px 4px 8px;background-image:linear-gradient(45deg,transparent 50%,#AA9F8E 50%),linear-gradient(135deg,#AA9F8E 50%,transparent 50%);background-position:calc(100% - 12px) 55%,calc(100% - 7px) 55%;background-size:5px 5px;background-repeat:no-repeat}
+</style>
+<script>
+window.dash = (() => {
+  const IDS = ["calendar", "characteristics", "checkpoints", "countries", "holdings", "horizons", "ideas", "index_coverage", "journal", "macro_board", "macro_history", "news", "outlook", "performance", "policy_rates", "risk", "risk_country", "risk_stocks", "rules", "summary"];
+  const D = {}, draws = {}, onD = [];
+  let loaded = false, failed = false;
+  const run = (name) => document.querySelectorAll('[data-draw="' + name + '"]').forEach((el) => {
+    if (el.closest('[hidden]')) return;
+    try { draws[name](el); } catch (e) { console.error('draw ' + name, e); }
+  });
+  const runAll = () => { onD.forEach((f) => { try { f(); } catch (e) { console.error(e); } }); Object.keys(draws).forEach(run); };
+  const api = {
+    data(id) {
+      if (D[id] !== undefined) { const v = D[id]; return {status: 'ok', data: v, columns: Array.isArray(v) && v[0] ? Object.keys(v[0]) : [], refreshing: false, truncated: false}; }
+      return {status: loaded ? 'error' : 'loading', data: []};
+    },
+    draw(name, fn) { if (fn) { draws[name] = fn; if (loaded) run(name); } else if (draws[name]) run(name); },
+    onData(fn) { onD.push(fn); if (loaded) fn(); },
+    setLink(n) { try { history.replaceState(null, '', '#' + n); } catch (e) {} },
+    params() { return {}; }, setParams() {}, resetParams() {}, calc() {}, loader() {}, refresh() {},
+    colors: ['var(--bb-amber)', 'var(--bb-blue)', 'var(--cds-chart-muted)'],
+  };
+  Promise.all(IDS.map((id) => fetch('data/' + id + '.json', {cache: 'no-store'}).then((r) => r.json()).then((j) => { D[id] = j; }).catch(() => { failed = true; })))
+    .then(() => { loaded = true; runAll(); });
+  let t; const later = () => { clearTimeout(t); t = setTimeout(runAll, 120); };
+  addEventListener('resize', later);
+  new MutationObserver(later).observe(document.documentElement, {subtree: true, attributes: true, attributeFilter: ['hidden']});
+  return api;
+})();
+</script>
+</head>
+<body>
+<div id="dash-root">
+<meta name="dash-one-writer">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600&display=swap');
+.gf{display:flex;flex-direction:column;gap:var(--cds-gap-xl);font-family:var(--font-anthropic-sans);color:var(--color-fg);font-variant-numeric:tabular-nums}
+.gf h1{font-family:var(--font-anthropic-serif);font-weight:400;font-size:var(--cds-font-size-title);margin:0;text-wrap:balance}
+.gf h2{font-size:var(--cds-font-size-heading);font-weight:var(--cds-font-weight-medium);margin:0}
+.gf h3{font-size:var(--cds-font-size-body);font-weight:var(--cds-font-weight-medium);margin:0}
+.gf p{margin:0;line-height:1.5}
+.gf .gf-sub{color:var(--color-fg-muted);font-size:var(--cds-font-size-caption)}
+.gf .gf-head{display:flex;flex-direction:column;gap:var(--cds-gap-sm);max-width:72ch}
+.gf .gf-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,9.5rem),1fr));gap:var(--cds-gap-md)}
+.gf .gf-tile{display:flex;flex-direction:column;gap:var(--cds-gap-xs);padding:var(--cds-pad-md);border:1px solid var(--color-border-line);border-radius:var(--cds-radius);background:var(--color-panel)}
+.gf .gf-tile .gf-num{font-family:var(--font-anthropic-serif);font-weight:400;font-size:var(--cds-font-size-title);line-height:1.1}
+.gf .gf-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,22rem),1fr));gap:var(--cds-gap-md)}
+.gf .gf-card{display:flex;flex-direction:column;gap:var(--cds-gap-sm);min-width:0;background:var(--color-panel);border:1px solid var(--color-border-line);border-radius:var(--cds-radius);padding:var(--cds-pad-lg)}
+.gf .gf-chart{position:relative;min-height:240px}
+.gf .gf-chart-sm{position:relative;min-height:190px}
+.gf .gf-tip{position:absolute;pointer-events:none;background:var(--cds-surface-popover);border:1px solid var(--cds-border);border-radius:var(--cds-radius);box-shadow:var(--cds-shadow-popover);padding:var(--cds-pad-xs) var(--cds-pad-sm);font-size:var(--cds-font-size-caption);white-space:nowrap}
+.gf .gf-tip .d{color:var(--cds-text-secondary)}
+.gf table{width:100%;border-collapse:collapse;font-size:var(--cds-font-size-caption)}
+.gf th{text-align:left;font-weight:var(--cds-font-weight-medium);color:var(--color-fg-muted);border-bottom:1px solid var(--color-border-line);padding:var(--cds-pad-xs) var(--cds-pad-sm);position:sticky;top:0;background:var(--color-panel);white-space:nowrap}
+.gf td{border-bottom:1px solid var(--color-border-line);padding:var(--cds-pad-xs) var(--cds-pad-sm);vertical-align:top}
+.gf td.n,.gf th.n{text-align:right}
+.gf .gf-scroll{max-height:34rem;overflow:auto}
+.gf .gf-x{overflow-x:auto}
+.gf .gf-sort{all:unset;cursor:pointer}
+.gf .gf-sort:focus-visible{outline:2px solid var(--color-fg)}
+.gf .gf-search{font:inherit;font-size:var(--cds-font-size-caption);padding:var(--cds-pad-xs) var(--cds-pad-sm);border:1px solid var(--color-border-line);border-radius:var(--cds-radius);background:var(--color-bg);color:var(--color-fg);max-width:18rem}
+.gf .pos{color:var(--color-ok)} .gf .neg{color:var(--color-bad)}
+.gf .gf-pill{display:inline-block;padding:0 var(--cds-pad-xs);border:1px solid var(--color-border-line);border-radius:var(--cds-radius);color:var(--color-fg-muted);font-size:var(--cds-font-size-caption)}
+.gf .gf-thesis{color:var(--color-fg-muted);min-width:16rem}
+.gf .gf-entry{display:flex;flex-direction:column;gap:var(--cds-gap-sm);padding-block:var(--cds-pad-sm);border-bottom:1px solid var(--color-border-line)}
+.gf .gf-entry:last-child{border-bottom:0}
+.gf .gf-entry dl{display:grid;grid-template-columns:minmax(6rem,auto) 1fr;gap:var(--cds-gap-xs) var(--cds-gap-md);margin:0}
+.gf .gf-entry dt{color:var(--color-fg-muted);font-size:var(--cds-font-size-caption)}
+.gf .gf-entry dd{margin:0;line-height:1.5}
+@media (max-width:520px){.gf .gf-entry dl{grid-template-columns:1fr}}
+.gf [data-dash-source-state=empty]{color:transparent}
+.gf [data-dash-source-state=refreshing]{opacity:.5;transition:opacity var(--cds-dur-slow)}
+.gf .gf-fail{display:flex;align-items:center;justify-content:center;gap:var(--cds-gap-xs);min-height:inherit;color:var(--color-fg-muted);font-size:var(--cds-font-size-caption)}
+.gf .gf-fail::before{content:"";width:.375rem;height:.375rem;border-radius:50%;background:var(--color-bad)}
+.gf .gf-outlook{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,26rem),1fr));gap:var(--cds-gap-md)}
+.gf .gf-region{display:flex;flex-direction:column;gap:var(--cds-gap-sm);min-width:0;padding:var(--cds-pad-md);border:1px solid var(--color-border-line);border-radius:var(--cds-radius);background:var(--color-bg)}
+.gf .gf-region.wide{grid-column:1/-1}
+.gf .gf-region-top{display:flex;flex-wrap:wrap;align-items:center;gap:var(--cds-gap-sm)}
+.gf .gf-region dl{display:grid;grid-template-columns:minmax(5.5rem,auto) 1fr;gap:var(--cds-gap-xs) var(--cds-gap-md);margin:0}
+.gf .gf-region dt{color:var(--color-fg-muted);font-size:var(--cds-font-size-caption)}
+.gf .gf-region dd{margin:0;line-height:1.55}
+.gf .gf-lede{font-family:var(--font-anthropic-serif);font-size:var(--cds-font-size-heading);line-height:1.35}
+.gf .gf-stance{display:inline-block;padding:0 var(--cds-pad-sm);border-radius:var(--cds-radius);font-size:var(--cds-font-size-caption);border:1px solid currentColor}
+.gf .st-Favourable{color:var(--color-ok)} .gf .st-Neutral{color:var(--color-warn)} .gf .st-Unfavourable{color:var(--color-bad)}
+.gf .gf-filter{display:flex;flex-wrap:wrap;gap:var(--cds-gap-xs)}
+.gf .gf-chip{font:inherit;font-size:var(--cds-font-size-caption);padding:var(--cds-pad-xs) var(--cds-pad-sm);border:1px solid var(--color-border-line);border-radius:var(--cds-radius);background:var(--color-bg);color:var(--color-fg);cursor:pointer}
+.gf .gf-chip[aria-pressed=true]{border-color:var(--color-fg);font-weight:var(--cds-font-weight-medium)}
+@media (max-width:520px){.gf .gf-region dl{grid-template-columns:1fr}}
+.gf .gf-hz{display:inline-block;white-space:nowrap;padding:0 var(--cds-pad-xs);border-radius:var(--cds-radius);font-size:var(--cds-font-size-caption);border:1px solid var(--color-border-line)}
+.gf .hz-Core{color:var(--color-fg)} .gf .hz-Momentum{color:var(--color-warn)} .gf .hz-Tactical{color:var(--color-bad)}
+.gf .gf-tl{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.gf .gf-tl li{display:grid;grid-template-columns:7.5rem 1fr;gap:var(--cds-gap-md);padding-block:var(--cds-pad-sm);border-bottom:1px solid var(--color-border-line)}
+.gf .gf-tl li:last-child{border-bottom:0}
+.gf .gf-tl .when{font-family:var(--font-anthropic-serif);font-size:var(--cds-font-size-heading)}
+.gf .gf-tl .when.past{color:var(--color-fg-muted)}
+.gf .gf-tl .body{display:flex;flex-direction:column;gap:var(--cds-gap-xs);min-width:0}
+@media (max-width:520px){.gf .gf-tl li{grid-template-columns:1fr}}
+.gf tr.gf-total td{font-weight:var(--cds-font-weight-medium);border-bottom:0}
+.gf tr.gf-group td{font-weight:var(--cds-font-weight-medium);color:var(--color-fg-muted);padding-top:var(--cds-pad-md);border-bottom:1px solid var(--color-border-line)}
+.gf .gf-tabs{display:flex;flex-wrap:wrap;gap:var(--cds-gap-xs);border-bottom:1px solid var(--color-border-line);padding-block:var(--cds-pad-xs)}
+.gf .gf-tab{font:inherit;font-size:var(--cds-font-size-body);padding:var(--cds-pad-xs) var(--cds-pad-md);border:0;border-bottom:2px solid transparent;background:none;color:var(--color-fg-muted);cursor:pointer}
+.gf .gf-tab[aria-selected=true]{color:var(--color-fg);border-bottom-color:var(--color-fg);font-weight:var(--cds-font-weight-medium)}
+.gf .gf-tab:focus-visible{outline:2px solid var(--color-fg)}
+.gf .gf-page{display:flex;flex-direction:column;gap:var(--cds-gap-xl)}
+.gf .gf-eyebrow{font-size:var(--cds-font-size-caption);letter-spacing:.06em;text-transform:uppercase;color:var(--color-fg-muted)}
+.gf .gf-byline{display:flex;flex-wrap:wrap;gap:var(--cds-gap-xs) var(--cds-gap-md);align-items:baseline;font-size:var(--cds-font-size-caption);color:var(--color-fg-muted)}
+.gf .gf-byline b,.gf .gf-foot b{color:var(--color-fg);font-weight:var(--cds-font-weight-medium)}
+.gf .gf-foot{display:flex;flex-wrap:wrap;justify-content:space-between;gap:var(--cds-gap-sm);padding-top:var(--cds-pad-md);border-top:1px solid var(--color-border-line);font-size:var(--cds-font-size-caption);color:var(--color-fg-muted)}
+.gf .gf-nchip{font:inherit;font-size:var(--cds-font-size-caption);padding:var(--cds-pad-xs) var(--cds-pad-sm);border:1px solid var(--color-border-line);border-radius:var(--cds-radius);background:var(--color-bg);color:var(--color-fg);cursor:pointer}
+.gf .gf-nchip[aria-pressed=true]{border-color:var(--color-fg);font-weight:var(--cds-font-weight-medium)}
+.gf .gf-minis{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,15rem),1fr));gap:var(--cds-gap-md);min-height:180px}
+.gf .gf-mini{display:flex;flex-direction:column;gap:var(--cds-gap-xs);min-width:0;padding:var(--cds-pad-md);border:1px solid var(--color-border-line);border-radius:var(--cds-radius);background:var(--color-bg)}
+.gf .gf-mini-top{display:flex;justify-content:space-between;align-items:baseline;gap:var(--cds-gap-sm)}
+.gf .gf-mini-val{font-family:var(--font-anthropic-serif);font-size:var(--cds-font-size-heading)}
+.gf .gf-mini-plot{position:relative;height:90px}
+.gf .gf-news{display:flex;flex-direction:column}
+.gf .gf-news article{display:flex;flex-direction:column;gap:var(--cds-gap-xs);padding-block:var(--cds-pad-sm);border-bottom:1px solid var(--color-border-line)}
+.gf .gf-news article:last-child{border-bottom:0}
+.gf .gf-news-top{display:flex;flex-wrap:wrap;gap:var(--cds-gap-sm);align-items:center}
+.gf .gf-news a{color:var(--color-fg-muted);font-size:var(--cds-font-size-caption)}
+.gf .gf-impact{font-size:var(--cds-font-size-caption)}
+.gf .gf-impact b{font-weight:var(--cds-font-weight-medium)}
+#dash-root{--dash-gutter:0}
+.gf{--kfh-black:#050504;--kfh-night:#11100D;--kfh-panel:#212121;--kfh-brand:#AA9F8E;--kfh-plate:#E8E4DD;--bb-amber:#AA9F8E;--bb-blue:#E8E4DD;--color-fg:#FFFFFF;--color-fg-muted:rgba(255,255,255,.72);--color-bg:#050504;--color-panel:rgba(255,255,255,.05);--color-border-line:rgba(255,255,255,.18);--color-ok:#8CCFAE;--color-bad:#E58B7C;--color-warn:#D8B878;--cds-surface-popover:#212121;--cds-border:rgba(255,255,255,.18);--cds-shadow-popover:0 8px 24px rgba(0,0,0,.5);--cds-text-secondary:rgba(255,255,255,.72);--cds-chart-grid:rgba(255,255,255,.08);--cds-chart-axis:rgba(255,255,255,.34);--cds-chart-muted:rgba(255,255,255,.45);--cds-radius:0;--kfh-font:Figtree,"Segoe UI",Tahoma,Arial,sans-serif;font-family:var(--kfh-font);background:linear-gradient(180deg,#11100D 0,#050504 360px);color:#FFFFFF;padding:clamp(16px,3.35vw,64px)}
+.gf h1,.gf h2,.gf h3,.gf .gf-num,.gf .gf-mini-val,.gf .gf-lede,.gf .gf-tl .when,.gf table{font-family:var(--kfh-font)}
+.gf h1,.gf .gf-num,.gf .gf-mini-val,.gf .gf-lede,.gf .gf-tl .when{font-weight:300}
+.gf h1{text-transform:uppercase;font-size:clamp(28px,3vw,40px);letter-spacing:.02em}
+.gf h2{text-transform:uppercase;font-weight:300;font-size:var(--cds-font-size-heading);letter-spacing:.04em}
+.gf h3{font-weight:500}
+.gf .gf-eyebrow{color:var(--kfh-brand);letter-spacing:.18em;text-transform:uppercase}
+.gf .gf-card,.gf .gf-tile,.gf .gf-region,.gf .gf-mini{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.18);border-radius:0}
+.gf th{background:#11100D;color:var(--kfh-brand);text-transform:uppercase;letter-spacing:.06em;font-weight:500}
+.gf tr.gf-group td{color:var(--kfh-brand);text-transform:uppercase;letter-spacing:.06em;background:transparent}
+.gf tbody tr:hover td{background:rgba(255,255,255,.035)}
+.gf .gf-tabs{border-bottom:1px solid rgba(255,255,255,.18);gap:var(--cds-gap-md)}
+.gf .gf-tab{text-transform:uppercase;letter-spacing:.08em;font-size:12px;color:rgba(255,255,255,.72);background:none;border-radius:0}
+.gf .gf-tab[aria-selected=true]{color:#FFFFFF;border-bottom-color:var(--kfh-brand);font-weight:500}
+.gf .gf-chip,.gf .gf-nchip{text-transform:uppercase;letter-spacing:.06em;font-size:12px;background:transparent;color:#FFFFFF;border:1px solid rgba(255,255,255,.34);border-radius:0}
+.gf .gf-chip[aria-pressed=true],.gf .gf-nchip[aria-pressed=true]{background:var(--kfh-plate);color:#050504;border-color:var(--kfh-plate)}
+.gf .gf-pill,.gf .gf-hz,.gf .gf-stance{text-transform:uppercase;letter-spacing:.06em;border-radius:0}
+.gf a{color:var(--kfh-plate)}
+.gf .gf-byline b,.gf .gf-foot b{color:#FFFFFF}
+.gf .gf-search{background:transparent;color:#FFFFFF;border-color:rgba(255,255,255,.34);border-radius:0}
+.gf .gf-controls{display:flex;flex-wrap:wrap;gap:var(--cds-gap-sm);align-items:center}
+.gf .gf-controls .dash-select{background-color:#11100D;color:#FFFFFF;border:1px solid rgba(255,255,255,.34);border-radius:0;font:inherit;font-size:var(--cds-font-size-caption)}
+.gf .gf-cov td{white-space:nowrap}
+.gf .gf-cov td.gf-wrap{white-space:normal;min-width:14rem}
+.gf .gf-cov details summary{cursor:pointer;color:var(--bb-blue)}
+.gf .gf-cov details p{margin-top:var(--cds-gap-xs);color:#BDBDBD;max-width:42rem;white-space:normal}
+.gf .gf-basis{font-size:var(--cds-font-size-caption);color:var(--color-fg-muted);margin-left:var(--cds-gap-xs)}
+.gf .gf-csort{all:unset;cursor:pointer}.gf .gf-csort:focus-visible{outline:2px solid var(--bb-amber)}.gf .gf-csort[aria-sort=ascending]::after{content:" \25B2"} .gf .gf-csort[aria-sort=descending]::after{content:" \25BC"}
+.gf .gf-brief{display:flex;flex-direction:column;gap:var(--cds-gap-sm);max-width:72ch}
+.gf .gf-brief p{line-height:1.6}
+.gf .gf-entry details summary{cursor:pointer;color:var(--kfh-brand, var(--color-fg-muted));font-size:var(--cds-font-size-caption);text-transform:uppercase;letter-spacing:.06em}
+.gf .gf-entry details[open] summary{margin-bottom:var(--cds-gap-sm)}
+</style>
+
+<div class="gf">
+  <header class="gf-head" id="top">
+    <span class="gf-eyebrow">KFH Capital · Funds Management</span>
+    <h1>GCC Active Fund</h1>
+    <p class="gf-byline" id="byline"><span>Portfolio manager <b>Mohammad AlSafran</b></span><span>Senior Analyst, Funds Management, KFH Capital</span></p>
+    <p>Paper fund run against the S&amp;P GCC All Share Islamic index (price return). As of <b data-draw="asof" data-source="summary" data-field="as_of">—</b> the fund has returned <b data-draw="fundRetHead" data-source="summary" data-field="fund_ret">—</b> since launch versus <b data-draw="benchRetHead" data-source="summary" data-field="bench_ret">—</b> for the benchmark.</p>
+    <p class="gf-sub">Total-return fund vs price-return benchmark, before the 1.5% management fee. Inception prices are a TradingView snapshot taken around 11:30 Riyadh on 1 Nov 2026 (intraday for Saudi, Qatar and Kuwait; Friday close for the UAE), used for both the fund and the benchmark.</p>
+  </header>
+
+  <nav class="gf-tabs" role="tablist" aria-label="Dashboard pages">
+    <button class="gf-tab" type="button" role="tab" id="tab-portfolio" data-page="portfolio" aria-controls="portfolio" aria-selected="true">AI PORTFOLIO</button>
+    <button class="gf-tab" type="button" role="tab" id="tab-markets" data-page="markets" aria-controls="markets" aria-selected="false">gcc allshare index</button>
+    <button class="gf-tab" type="button" role="tab" id="tab-macroview" data-page="macroview" aria-controls="macroview" aria-selected="false">Macro and news</button>
+    <button class="gf-tab" type="button" role="tab" id="tab-riskview" data-page="riskview" aria-controls="riskview" aria-selected="false">Risk</button>
+    <button class="gf-tab" type="button" role="tab" id="tab-timelineview" data-page="timelineview" aria-controls="timelineview" aria-selected="false">Layers</button>
+    <button class="gf-tab" type="button" role="tab" id="tab-journalview" data-page="journalview" aria-controls="journalview" aria-selected="false">PM journal</button>
+  </nav>
+
+  <section class="gf-page" id="portfolio" role="tabpanel" aria-labelledby="tab-portfolio">
+    <section class="gf-tiles" id="kpis" aria-label="Headline figures">
+      <div class="gf-tile"><span class="gf-sub">Net asset value (KWD)</span><span class="gf-num" data-draw="nav" data-source="summary" data-field="nav_kwd">—</span><span class="gf-sub">Started at 10m KWD</span></div>
+      <div class="gf-tile"><span class="gf-sub">Fund return, since launch</span><span class="gf-num" data-draw="fundRet" data-source="summary" data-field="fund_ret">—</span><span class="gf-sub">Last session <b data-draw="fund1d" data-source="summary" data-field="fund_ret_1d">—</b></span></div>
+      <div class="gf-tile"><span class="gf-sub">Benchmark return, since launch</span><span class="gf-num" data-draw="benchRet" data-source="summary" data-field="bench_ret">—</span><span class="gf-sub">Last session <b data-draw="bench1d" data-source="summary" data-field="bench_ret_1d">—</b></span></div>
+      <div class="gf-tile"><span class="gf-sub">Excess return (bps)</span><span class="gf-num" data-draw="excess" data-source="summary" data-field="excess_bps">—</span><span class="gf-sub">Fund minus benchmark</span></div>
+      <div class="gf-tile"><span class="gf-sub">Active share</span><span class="gf-num" data-draw="activeShare" data-source="summary" data-field="active_share">—</span><span class="gf-sub">Share of the fund that differs from the index</span></div>
+      <div class="gf-tile"><span class="gf-sub">Holdings</span><span class="gf-num" data-draw="nHold" data-source="summary" data-field="holdings">—</span><span class="gf-sub"><b data-draw="nOff" data-source="summary" data-field="off_index">—</b> off-index, cash <b data-draw="cash" data-source="summary" data-field="cash_pct">—</b></span></div>
+    </section>
+
+    <section class="gf-grid">
+      <div class="gf-card" id="performance">
+        <h2>Fund vs benchmark</h2>
+        <p class="gf-sub">Both rebased to 100 at launch. One point per trading day.</p>
+        <div class="gf-chart" data-draw="perfChart" data-source="performance"></div>
+      </div>
+      <div class="gf-card" id="countries">
+        <h2>Country weights</h2>
+        <p class="gf-sub">Fund and benchmark weight by country at the latest mark (<span data-draw="ctryAsof" data-source="summary" data-field="as_of">—</span>). Active is fund minus benchmark; the limit is plus or minus ten points per country.</p>
+        <div class="gf-x"><table data-source="countries" data-row-key="country">
+          <thead><tr><th data-field="country">Country</th><th class="n" data-field="port_weight">Fund</th><th class="n" data-field="bench_weight">Benchmark</th><th class="n" data-field="active">Active</th></tr></thead>
+          <tbody data-draw="ctryBody" data-source="countries"></tbody>
+        </table></div>
+        <div class="gf-chart-sm" data-draw="ctryChart" data-source="countries"></div>
+      </div>
+    </section>
+
+    <section class="gf-card" id="holdings">
+      <h2>Holdings and why I own them</h2>
+      <p class="gf-sub">Score combines value, quality, momentum and low beta (z-scores across the universe) plus a macro overlay. Click a column to sort.</p>
+      <input class="gf-search" id="hold-search" type="search" placeholder="Search company or country" aria-label="Search holdings">
+      <div class="gf-scroll gf-x">
+        <table data-source="holdings" data-row-key="sym">
+          <thead><tr>
+            <th data-field="name"><button class="gf-sort" data-sort="name">Company</button></th>
+            <th data-field="country"><button class="gf-sort" data-sort="country">Country</button></th>
+            <th data-field="in_index">Index</th>
+            <th class="n" data-field="weight"><button class="gf-sort" data-sort="weight">Weight</button></th>
+            <th class="n" data-field="bench_weight"><button class="gf-sort" data-sort="bench_weight">Benchmark</button></th>
+            <th class="n" data-field="active"><button class="gf-sort" data-sort="active">Active</button></th>
+            <th class="n" data-field="ret"><button class="gf-sort" data-sort="ret">Return</button></th>
+            <th class="n" data-field="contrib_kwd"><button class="gf-sort" data-sort="contrib_kwd">P&amp;L (KWD)</button></th>
+            <th class="n" data-field="score"><button class="gf-sort" data-sort="score">Score</button></th>
+            <th data-field="horizon"><button class="gf-sort" data-sort="horizon">Horizon</button></th>
+            <th data-field="thesis">Why</th>
+            <th data-field="review">What would change my view</th>
+          </tr></thead>
+          <tbody data-draw="holdingsBody" data-source="holdings"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="gf-grid">
+      <div class="gf-card" id="profile">
+        <h2>Portfolio profile</h2>
+        <p class="gf-sub">Weighted by holding. P/E is the harmonic mean of positive earners.</p>
+        <div class="gf-x"><table data-source="characteristics" data-row-key="metric">
+          <thead><tr><th data-field="metric">Measure</th><th class="n" data-field="fund">Fund</th><th class="n" data-field="benchmark">Benchmark</th></tr></thead>
+          <tbody data-draw="charBody" data-source="characteristics"></tbody>
+        </table></div>
+      </div>
+      <div class="gf-card" id="rules">
+        <h2>Mandate and process</h2>
+        <p class="gf-sub">Risk limits and how stocks are picked. Off-index names need KFH Capital Shariah board sign-off before any real money.</p>
+        <div class="gf-x"><table data-source="rules" data-row-key="rule">
+          <thead><tr><th data-field="rule">Rule</th><th data-field="limit">Setting</th></tr></thead>
+          <tbody data-draw="rulesBody" data-source="rules"></tbody>
+        </table></div>
+      </div>
+    </section>
+  </section>
+
+  <section class="gf-page" id="markets" role="tabpanel" aria-labelledby="tab-markets" hidden="">
+    <section class="gf-card" id="coverage">
+      <h2>Index coverage: all 99 constituents</h2>
+      <p class="gf-sub">Every stock in the S&amp;P GCC All Share Islamic with its index weight, our weight and a view. Written views are my daily shortlist of about 30 names. Model views come from the factor score at launch (1 Nov 2026): Favourable at +0.4 or above, Unfavourable at -0.4 or below. They are a starting point, not a view I have checked stock by stock. Prices, P/E and 1-month moves are TradingView closes; index weights use the latest close, fund weights the latest morning run. Earnings are the latest reported quarter from TradingView, as reported (one-off gains are not stripped out), in millions of local currency; growth is left blank where the quarter is a loss or the base is not comparable. Bank revenue is TradingView's total revenue.</p>
+      <div class="gf-controls">
+        <input class="gf-search" type="search" id="cov-q" placeholder="Search stock or sector" aria-label="Search stock or sector">
+        <select class="dash-select" id="cov-ctry" aria-label="Country"><option value="">All countries</option><option>Saudi Arabia</option><option>UAE</option><option>Qatar</option><option>Kuwait</option></select>
+        <select class="dash-select" id="cov-view" aria-label="View"><option value="">All views</option><option>Favourable</option><option>Neutral</option><option>Unfavourable</option></select>
+        <select class="dash-select" id="cov-basis" aria-label="Basis"><option value="">Written and model</option><option value="Written">Written views only</option><option value="Model">Model views only</option></select>
+        <select class="dash-select" id="cov-held" aria-label="Held"><option value="">Held and not held</option><option value="Yes">Held by the fund</option><option value="No">Not held</option></select>
+        <span class="gf-sub">Showing <b data-draw="covCount" data-source="index_coverage">—</b> stocks</span>
+      </div>
+      <div class="gf-x gf-scroll"><table class="gf-cov" data-source="index_coverage" data-row-key="sym">
+        <thead><tr>
+          <th data-field="name">Stock</th>
+          <th data-field="country">Country</th>
+          <th class="n" data-field="index_w"><button class="gf-csort" type="button" data-sort="index_w" aria-sort="descending">Index wt</button></th>
+          <th class="n" data-field="fund_w"><button class="gf-csort" type="button" data-sort="fund_w">Fund wt</button></th>
+          <th class="n" data-field="active"><button class="gf-csort" type="button" data-sort="active">Active</button></th>
+          <th class="n" data-field="score"><button class="gf-csort" type="button" data-sort="score">Model score</button></th>
+          <th class="n" data-field="pe"><button class="gf-csort" type="button" data-sort="pe">P/E</button></th>
+          <th class="n" data-field="chg_1m"><button class="gf-csort" type="button" data-sort="chg_1m">1 month</button></th>
+          <th data-field="q_end">Quarter</th>
+          <th class="n" data-field="rev_q">Revenue (m)</th>
+          <th class="n" data-field="rev_yoy"><button class="gf-csort" type="button" data-sort="rev_yoy">Rev YoY</button></th>
+          <th class="n" data-field="rev_qoq"><button class="gf-csort" type="button" data-sort="rev_qoq">Rev QoQ</button></th>
+          <th class="n" data-field="ni_q">Net profit (m)</th>
+          <th class="n" data-field="ni_yoy"><button class="gf-csort" type="button" data-sort="ni_yoy">Profit YoY</button></th>
+          <th class="n" data-field="ni_qoq"><button class="gf-csort" type="button" data-sort="ni_qoq">Profit QoQ</button></th>
+          <th data-field="view">View</th>
+          <th data-field="note">Notes</th>
+        </tr></thead>
+        <tbody data-draw="covBody" data-source="index_coverage"></tbody>
+      </table></div>
+    </section>
+
+  </section>
+
+  <section class="gf-page" id="macroview" role="tabpanel" aria-labelledby="tab-macroview" hidden="">
+
+    <section class="gf-card" id="macro-charts">
+      <h2>The last three months</h2>
+      <p class="gf-sub">Daily closes. Point at a line for the value on each day.</p>
+      <div class="gf-minis" data-draw="macroMinis" data-source="macro_history"></div>
+    </section>
+    <section class="gf-card" id="macro-now">
+      <h2>Markets and macro that move this portfolio</h2>
+      <p class="gf-sub">Index, oil, rate and currency levels, the news behind them and the dates ahead, each tied to a position or rule in the fund. Refreshed each morning with the daily run. Levels are TradingView closes; GCC as of <b data-draw="macroAsof" data-source="macro_board" data-field="as_of" data-where="id=tasi">—</b>.</p>
+      <div class="gf-tiles">
+        <div class="gf-tile"><span class="gf-sub">Saudi Arabia (TASI)</span><span class="gf-num" data-draw="mTasi" data-source="macro_board" data-field="last" data-where="id=tasi">—</span><span class="gf-sub">Past week <b data-draw="mTasiW" data-source="macro_board" data-field="chg_1w" data-where="id=tasi">—</b></span></div>
+        <div class="gf-tile"><span class="gf-sub">Dubai (DFMGI)</span><span class="gf-num" data-draw="mDfm" data-source="macro_board" data-field="last" data-where="id=dfm">—</span><span class="gf-sub">Past week <b data-draw="mDfmW" data-source="macro_board" data-field="chg_1w" data-where="id=dfm">—</b></span></div>
+        <div class="gf-tile"><span class="gf-sub">Brent crude ($/bbl)</span><span class="gf-num" data-draw="mBrent" data-source="macro_board" data-field="last" data-where="id=brent">—</span><span class="gf-sub">Past week <b data-draw="mBrentW" data-source="macro_board" data-field="chg_1w" data-where="id=brent">—</b>; our cut level is $90</span></div>
+        <div class="gf-tile"><span class="gf-sub">US 10-year yield</span><span class="gf-num" data-draw="mUs10" data-source="macro_board" data-field="last" data-where="id=us10y">—</span><span class="gf-sub">Past week <b data-draw="mUs10W" data-source="macro_board" data-field="chg_1w" data-where="id=us10y">—</b></span></div>
+        <div class="gf-tile"><span class="gf-sub">Fed funds (upper bound)</span><span class="gf-num" data-draw="mFed" data-source="policy_rates" data-field="rate" data-where="id=us">—</span><span class="gf-sub">Next decision 9 Dec 2026</span></div>
+      </div>
+    </section>
+
+    <section class="gf-card" id="macro-board">
+      <h2>Market board</h2>
+      <p class="gf-sub">Changes are price moves; US yields move in basis points. "Vs 200-day" is how far the last close sits from its 200-day average. Technical notes use daily closes: trend from the 50- and 200-day averages, 14-day RSI (above 70 overbought, below 30 oversold), and support and resistance from the 20-day low and high.</p>
+      <div class="gf-x"><table data-source="macro_board" data-row-key="id">
+        <thead><tr><th data-field="name">Market</th><th class="n" data-field="last">Last</th><th class="n" data-field="chg_1d">1 day</th><th class="n" data-field="chg_1w">1 week</th><th class="n" data-field="chg_1m">1 month</th><th class="n" data-field="chg_ytd">YTD</th><th class="n" data-field="vs_200d">Vs 200-day</th><th data-field="tech">Technical note</th></tr></thead>
+        <tbody data-draw="macroBody" data-source="macro_board"></tbody>
+      </table></div>
+    </section>
+
+    <section class="gf-grid">
+      <div class="gf-card" id="policy-rates">
+        <h2>Policy rates</h2>
+        <p class="gf-sub">Saudi, UAE and Qatar peg to the dollar, so they follow the Fed; Kuwait pegs to a basket and can lag.</p>
+        <div class="gf-x"><table data-source="policy_rates" data-row-key="id">
+          <thead><tr><th data-field="bank">Central bank</th><th class="n" data-field="rate">Rate</th><th data-field="last_move">Last move</th><th data-field="next">Next</th></tr></thead>
+          <tbody data-draw="ratesBody" data-source="policy_rates"></tbody>
+        </table></div>
+      </div>
+      <div class="gf-card" id="macro-calendar">
+        <h2>Dates ahead</h2>
+        <p class="gf-sub">Events that could trigger a rule in the fund. Dates marked expected are not yet confirmed.</p>
+        <ol class="gf-tl" data-draw="calList" data-source="calendar"></ol>
+      </div>
+    </section>
+
+    <section class="gf-card" id="macro-news">
+      <h2>News that matters for the fund</h2>
+      <p class="gf-sub">What happened, and what it means for our positions. Newest first.</p>
+      <div class="gf-filter" role="group" aria-label="Filter news by topic">
+        <button class="gf-nchip" type="button" data-cat="" aria-pressed="true">All</button>
+        <button class="gf-nchip" type="button" data-cat="Geopolitics" aria-pressed="false">Geopolitics</button>
+        <button class="gf-nchip" type="button" data-cat="Oil" aria-pressed="false">Oil</button>
+        <button class="gf-nchip" type="button" data-cat="Fed and rates" aria-pressed="false">Fed and rates</button>
+        <button class="gf-nchip" type="button" data-cat="Company" aria-pressed="false">Company</button>
+        <button class="gf-nchip" type="button" data-cat="Policy" aria-pressed="false">Policy</button>
+        <button class="gf-nchip" type="button" data-cat="Shipping" aria-pressed="false">Shipping</button>
+        <button class="gf-nchip" type="button" data-cat="Markets" aria-pressed="false">Markets</button>
+        <button class="gf-nchip" type="button" data-cat="Global" aria-pressed="false">Global</button>
+        <button class="gf-nchip" type="button" data-cat="Index flows" aria-pressed="false">Index flows</button>
+      </div>
+      <div class="gf-news" data-draw="newsList" data-source="news">—</div>
+    </section>
+  </section>
+
+  <section class="gf-page" id="riskview" role="tabpanel" aria-labelledby="tab-riskview" hidden="">
+    <section class="gf-card" id="risk">
+      <h2>Risk: fund vs benchmark</h2>
+      <p class="gf-sub">Current weights applied to the last 12 months of prices (Nov 2025 to Oct 2026). These are ex-ante estimates; realised fund risk replaces the backcast once the fund has about 20 trading days of history. The backcast return used the same period the stocks were picked from, so it flatters the fund.</p>
+      <div class="gf-x"><table data-source="risk" data-row-key="id">
+        <thead><tr><th data-field="metric">Measure</th><th class="n" data-field="fund">Fund</th><th class="n" data-field="benchmark">Benchmark</th><th data-field="note">Note</th></tr></thead>
+        <tbody data-draw="riskBody" data-source="risk"></tbody>
+      </table></div>
+    </section>
+
+    <section class="gf-grid" id="risk-detail">
+      <div class="gf-card">
+        <h2>Where the active risk comes from</h2>
+        <p class="gf-sub">Share of tracking error by country. Negative means the bets in that country offset risk elsewhere.</p>
+        <div class="gf-chart-sm" data-draw="riskCtryChart" data-source="risk_country"></div>
+      </div>
+      <div class="gf-card">
+        <h2>Stock-level risk</h2>
+        <p class="gf-sub">Holdings and the largest benchmark names we don't own, ranked by share of tracking error. Days to sell assumes 25% of 30-day average volume.</p>
+        <div class="gf-scroll gf-x"><table data-source="risk_stocks" data-row-key="sym">
+          <thead><tr><th data-field="name">Company</th><th class="n" data-field="active">Active</th><th class="n" data-field="vol">Volatility</th><th class="n" data-field="beta">Beta</th><th class="n" data-field="te_share">Share of TE</th><th class="n" data-field="days_to_sell">Days to sell</th></tr></thead>
+          <tbody data-draw="riskStockBody" data-source="risk_stocks"></tbody>
+        </table></div>
+      </div>
+    </section>
+
+  </section>
+
+  <section class="gf-page" id="timelineview" role="tabpanel" aria-labelledby="tab-timelineview" hidden="">
+    <section class="gf-card" id="outlook">
+      <h2>Market commentary</h2>
+      <p class="gf-sub">My read on the GCC and each market, with the fund's stance and the stocks I think look best and worst. Refreshed each morning with the daily run.</p>
+      <div class="gf-outlook" data-draw="outlookList" data-source="outlook">—</div>
+    </section>
+
+    <section class="gf-grid" id="timeline">
+      <div class="gf-card">
+        <h2>How long each view runs</h2>
+        <p class="gf-sub">The fund has three layers on different clocks. I review daily but trade only when something changes.</p>
+        <div class="gf-x"><table data-source="horizons" data-row-key="layer">
+          <thead><tr><th data-field="layer">Layer</th><th data-field="horizon">Horizon</th><th data-field="what">What it covers</th><th data-field="changes">What makes me act</th></tr></thead>
+          <tbody data-draw="horizonsBody" data-source="horizons"></tbody>
+        </table></div>
+      </div>
+      <div class="gf-card">
+        <h2>Checkpoints ahead</h2>
+        <p class="gf-sub">Dated events where the views get tested, and what I plan to do at each.</p>
+        <ol class="gf-tl" data-draw="checkpointList" data-source="checkpoints"></ol>
+      </div>
+    </section>
+
+  </section>
+
+  <section class="gf-page" id="journalview" role="tabpanel" aria-labelledby="tab-journalview" hidden="">
+    <section class="gf-card" id="journal">
+      <h2>Daily PM journal</h2>
+      <p class="gf-sub">A short read on each day: what moved, what I did and my view. Open "Full notes" for the detailed numbers. Newest first.</p>
+      <div data-draw="journalList" data-source="journal">—</div>
+    </section>
+
+  </section>
+
+  <footer class="gf-foot" id="footer"><span><b>Mohammad AlSafran</b> | KFH Capital</span><span>Paper portfolio for internal discussion. Not investment advice.</span></footer>
+
+</div>
+
+<script>
+(() => {
+  // Pages
+  const PAGES = ['portfolio', 'markets', 'macroview', 'riskview', 'timelineview', 'journalview'];
+  const want = location.hash.slice(1) === 'overview' ? 'portfolio' : location.hash.slice(1);
+  let current = PAGES.includes(want) ? want : 'portfolio';
+  const showPage = (p) => {
+    current = p;
+    document.querySelectorAll('.gf-page').forEach((s) => { s.hidden = s.id !== p; });
+    document.querySelectorAll('.gf-tab').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.page === p)));
+  };
+  document.querySelectorAll('.gf-tab').forEach((b) => b.addEventListener('click', () => { showPage(b.dataset.page); dash.setLink(b.dataset.page); }));
+  dash.onData(() => showPage(current));
+  showPage(current);
+
+  const pct = d3.format('+.2%'), pct1 = d3.format('.1%'), num = d3.format(',.0f'), bps = d3.format('+,.0f');
+  const CN = {SA:'Saudi Arabia', AE:'UAE', QA:'Qatar', KW:'Kuwait'};
+  const sign = (el, v) => { el.classList.toggle('pos', v > 0); el.classList.toggle('neg', v < 0); };
+  const fail = (el, st) => { el.replaceChildren(); if (st === 'error') { const d = document.createElement('div'); d.className = 'gf-fail'; d.textContent = 'Failed to load'; el.append(d); } else el.textContent = '—'; };
+  const one = (name, field, fmt, signed) => dash.draw(name, (el) => {
+    const s = dash.data('summary');
+    if (s.status !== 'ok' || !s.data.length) { el.textContent = '—'; return; }
+    const v = s.data[0][field]; el.textContent = fmt(v); if (signed) sign(el, v);
+  });
+  one('asof', 'as_of', (v) => d3.utcFormat('%-d %b %Y')(new Date(v)));
+  one('fundRetHead', 'fund_ret', pct, true); one('benchRetHead', 'bench_ret', pct, true);
+  one('nav', 'nav_kwd', num); one('fundRet', 'fund_ret', pct, true); one('benchRet', 'bench_ret', pct, true);
+  one('fund1d', 'fund_ret_1d', pct, true); one('bench1d', 'bench_ret_1d', pct, true);
+  one('excess', 'excess_bps', bps, true); one('activeShare', 'active_share', pct1);
+  one('nHold', 'holdings', num); one('nOff', 'off_index', num); one('cash', 'cash_pct', pct1);
+
+  // Performance lines
+  dash.draw('perfChart', (el) => {
+    const d = dash.data('performance');
+    if (d.status !== 'ok') { fail(el, d.status); return; }
+    el.replaceChildren();
+    const rows = d.data.map((r) => ({date: new Date(r.date), fund: +r.fund, benchmark: +r.benchmark}));
+    const W = el.clientWidth || 600, H = 240, m = {t: 12, r: 124, b: 26, l: 44};
+    const x = d3.scaleUtc(rows.length > 1 ? d3.extent(rows, (r) => r.date) : [d3.utcDay.offset(rows[0].date, -1), d3.utcDay.offset(rows[0].date, 1)], [m.l, W - m.r]);
+    const lo = d3.min(rows, (r) => Math.min(r.fund, r.benchmark)), hi = d3.max(rows, (r) => Math.max(r.fund, r.benchmark));
+    const pad = Math.max(0.5, (hi - lo) * 0.15);
+    const y = d3.scaleLinear([lo - pad, hi + pad], [H - m.b, m.t]).nice();
+    const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`);
+    svg.append('g').selectAll('line').data(y.ticks(4)).join('line').attr('x1', m.l).attr('x2', W - m.r).attr('y1', y).attr('y2', y).attr('stroke', 'var(--cds-chart-grid)');
+    const ya = svg.append('g').attr('transform', `translate(${m.l},0)`).call(d3.axisLeft(y).ticks(4).tickSize(0)).attr('font-size', null).attr('font-family', null);
+    ya.select('.domain').remove(); ya.selectAll('text').attr('fill', 'var(--color-fg-muted)').style('font-size', 'var(--cds-font-size-caption)');
+    const xa = svg.append('g').attr('transform', `translate(0,${H - m.b})`).call(d3.axisBottom(x).ticks(Math.min(rows.length + 1, Math.max(2, Math.floor(W / 110)))).tickFormat(d3.utcFormat('%b %-d')).tickSize(0).tickPadding(8)).attr('font-size', null).attr('font-family', null);
+    xa.select('.domain').attr('stroke', 'var(--cds-chart-axis)'); xa.selectAll('text').attr('fill', 'var(--color-fg-muted)').style('font-size', 'var(--cds-font-size-caption)');
+    const ser = [['fund', 'Fund', 'var(--bb-amber)'], ['benchmark', 'Benchmark', 'var(--cds-chart-muted)']];
+    ser.forEach(([k, label, c]) => {
+      svg.append('path').datum(rows).attr('fill', 'none').attr('stroke', c).attr('stroke-width', 2).attr('stroke-linecap', 'round').attr('stroke-linejoin', 'round').attr('d', d3.line().x((r) => x(r.date)).y((r) => y(r[k])));
+      svg.append('g').selectAll('circle').data(rows).join('circle').attr('cx', (r) => x(r.date)).attr('cy', (r) => y(r[k])).attr('r', rows.length < 15 ? 3 : 0).attr('fill', c);
+    });
+    const last = rows[rows.length - 1];
+    let ly = ser.map(([k]) => y(last[k]));
+    if (Math.abs(ly[0] - ly[1]) < 14) { const mid = (ly[0] + ly[1]) / 2; const up = last.fund >= last.benchmark; ly = up ? [mid - 8, mid + 8] : [mid + 8, mid - 8]; }
+    ser.forEach(([k, label, c], i) => svg.append('text').attr('x', x(last.date) + 8).attr('y', ly[i]).attr('dy', '0.35em').attr('fill', c).style('font-size', 'var(--cds-font-size-caption)').text(`${label} ${last[k].toFixed(2)}`));
+    const tip = d3.select(el).append('div').attr('class', 'gf-tip').style('opacity', 0);
+    svg.append('rect').attr('x', m.l).attr('y', m.t).attr('width', W - m.l - m.r).attr('height', H - m.t - m.b).attr('fill', 'transparent')
+      .on('pointermove', (ev) => {
+        const [px] = d3.pointer(ev); const dt = x.invert(px);
+        const r = rows.reduce((a, b) => Math.abs(b.date - dt) < Math.abs(a.date - dt) ? b : a);
+        tip.style('opacity', 1).replaceChildren();
+        const n = tip.node();
+        const dd = document.createElement('div'); dd.className = 'd'; dd.textContent = d3.utcFormat('%a %-d %b %Y')(r.date); n.append(dd);
+        [['Fund', r.fund], ['Benchmark', r.benchmark], ['Gap', r.fund - r.benchmark]].forEach(([l, v]) => { const p = document.createElement('div'); p.textContent = `${l}: ${l === 'Gap' ? d3.format('+.2f')(v) : v.toFixed(2)}`; n.append(p); });
+        const tx = Math.min(Math.max(0, x(r.date) / W * el.clientWidth + 10), el.clientWidth - n.offsetWidth);
+        tip.style('left', `${tx}px`).style('top', '8px');
+      })
+      .on('pointerleave', () => tip.style('opacity', 0));
+  });
+
+  one('ctryAsof', 'as_of', (v) => d3.utcFormat('%-d %b %Y')(new Date(v)));
+  dash.draw('ctryBody', (tb) => {
+    const d = dash.data('countries'); tb.replaceChildren(); if (d.status !== 'ok') return;
+    d.data.forEach((r) => {
+      const tr = document.createElement('tr'); tr.dataset.key = r.country;
+      const c = (t, cls, v) => { const td = document.createElement('td'); td.textContent = t; if (cls) td.className = cls; if (v !== undefined) sign(td, v); tr.append(td); };
+      c(r.country); c(pct1(r.port_weight), 'n'); c(pct1(r.bench_weight), 'n'); c(d3.format('+.1%')(r.active), 'n', r.active);
+      tb.append(tr);
+    });
+  });
+
+  // Country active bars
+  dash.draw('ctryChart', (el) => {
+    const d = dash.data('countries');
+    if (d.status !== 'ok') { fail(el, d.status); return; }
+    el.replaceChildren();
+    const rows = d.data.map((r) => ({c: r.country, a: +r.active, p: +r.port_weight, b: +r.bench_weight}));
+    const W = el.clientWidth || 500, bh = 22, gap = 12, m = {t: 8, r: 64, b: 8, l: 100};
+    const H = m.t + m.b + rows.length * (bh + gap);
+    const ext = Math.max(0.1, d3.max(rows, (r) => Math.abs(r.a)));
+    const x = d3.scaleLinear([-ext, ext], [m.l + 56, W - m.r]);
+    const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`);
+    svg.append('line').attr('x1', x(0)).attr('x2', x(0)).attr('y1', m.t).attr('y2', H - m.b).attr('stroke', 'var(--cds-chart-axis)');
+    rows.forEach((r, i) => {
+      const yy = m.t + i * (bh + gap);
+      svg.append('text').attr('x', m.l - 10).attr('y', yy + bh / 2).attr('dy', '0.35em').attr('text-anchor', 'end').attr('fill', 'var(--color-fg)').style('font-size', 'var(--cds-font-size-caption)').text(r.c);
+      svg.append('rect').attr('x', Math.min(x(0), x(r.a))).attr('y', yy).attr('width', Math.abs(x(r.a) - x(0))).attr('height', bh).attr('rx', 3)
+        .attr('fill', r.a < 0 ? 'var(--cds-chart-muted)' : 'var(--bb-amber)');
+      svg.append('text').attr('x', r.a < 0 ? x(r.a) - 6 : x(r.a) + 6).attr('y', yy + bh / 2).attr('dy', '0.35em').attr('text-anchor', r.a < 0 ? 'end' : 'start')
+        .attr('fill', 'var(--color-fg-muted)').style('font-size', 'var(--cds-font-size-caption)').text(d3.format('+.1%')(r.a));
+    });
+  });
+
+  // Journal
+  dash.draw('journalList', (el) => {
+    const d = dash.data('journal');
+    if (d.status !== 'ok') { fail(el, d.status); return; }
+    el.replaceChildren();
+    const L = [['market', 'Market'], ['analysis', 'What I analysed'], ['positioning', 'Positioning'], ['trades', 'Trades'], ['watch', 'Watching next']];
+    d.data.forEach((e) => {
+      const art = document.createElement('article'); art.className = 'gf-entry';
+      const dt0 = document.createElement('span'); dt0.className = 'gf-sub'; dt0.textContent = d3.utcFormat('%a %-d %b %Y')(new Date(e.date));
+      const h = document.createElement('h3'); h.textContent = e.title || e.headline;
+      art.append(dt0, h);
+      if (e.brief) {
+        const box = document.createElement('div'); box.className = 'gf-brief';
+        String(e.brief).split(/\n\s*\n/).forEach((para) => { const p = document.createElement('p'); p.textContent = para.trim(); box.append(p); });
+        art.append(box);
+      } else { const p = document.createElement('p'); p.textContent = e.headline; art.append(p); }
+      const det = document.createElement('details'); const sm = document.createElement('summary'); sm.textContent = 'Full notes'; det.append(sm);
+      if (e.title) { const hp = document.createElement('p'); hp.className = 'gf-sub'; hp.textContent = e.headline; det.append(hp); }
+      const dl = document.createElement('dl');
+      L.forEach(([k, lab]) => { if (!e[k]) return; const dt = document.createElement('dt'); dt.textContent = lab; const dd = document.createElement('dd'); dd.textContent = e[k]; dl.append(dt, dd); });
+      det.append(dl); art.append(det); el.append(art);
+    });
+  });
+
+  // Holdings table
+  let sortKey = 'weight', sortDir = -1;
+  document.querySelectorAll('.gf-sort').forEach((b) => b.addEventListener('click', () => {
+    const k = b.dataset.sort; if (k === sortKey) sortDir = -sortDir; else { sortKey = k; sortDir = (k === 'name' || k === 'country' || k === 'horizon') ? 1 : -1; }
+    document.querySelectorAll('.gf-sort').forEach((o) => o.closest('th').setAttribute('aria-sort', o.dataset.sort === sortKey ? (sortDir > 0 ? 'ascending' : 'descending') : 'none'));
+    dash.draw('holdingsBody');
+  }));
+  document.querySelectorAll('#hold-search').forEach((i) => i.addEventListener('input', () => dash.draw('holdingsBody')));
+  dash.draw('holdingsBody', (tb) => {
+    const d = dash.data('holdings'); tb.replaceChildren();
+    if (d.status !== 'ok') return;
+    const q = (document.querySelector('#hold-search')?.value || '').toLowerCase();
+    const rows = d.data.filter((r) => !q || `${r.name} ${CN[r.country]} ${r.sym}`.toLowerCase().includes(q))
+      .slice().sort((a, b) => { const va = a[sortKey], vb = b[sortKey]; return (typeof va === 'number' ? va - vb : String(va).localeCompare(String(vb))) * sortDir; });
+    rows.forEach((r) => {
+      const tr = document.createElement('tr'); tr.dataset.key = r.sym;
+      const cell = (t, cls, v) => { const td = document.createElement('td'); td.textContent = t; if (cls) td.className = cls; if (v !== undefined) sign(td, v); tr.append(td); return td; };
+      cell(r.name); cell(CN[r.country] || r.country);
+      const ti = document.createElement('td'); const sp = document.createElement('span'); sp.className = 'gf-pill'; sp.textContent = r.in_index; ti.append(sp); tr.append(ti);
+      cell(pct1(r.weight), 'n'); cell(pct1(r.bench_weight), 'n'); cell(d3.format('+.1%')(r.active), 'n', r.active);
+      cell(pct(r.ret), 'n', r.ret); cell(d3.format('+,.0f')(r.contrib_kwd), 'n', r.contrib_kwd); cell(d3.format('+.2f')(r.score), 'n');
+      const hz = document.createElement('td'); const hp = document.createElement('span'); hp.className = 'gf-hz hz-' + (r.horizon || '').split(' ')[0]; hp.textContent = r.horizon || '—'; hz.append(hp); tr.append(hz);
+      cell(r.thesis, 'gf-thesis'); cell(r.review || '', 'gf-thesis');
+      tb.append(tr);
+    });
+  });
+
+  dash.draw('charBody', (tb) => {
+    const d = dash.data('characteristics'); tb.replaceChildren(); if (d.status !== 'ok') return;
+    d.data.forEach((r) => { const tr = document.createElement('tr'); tr.dataset.key = r.metric;
+      [r.metric, d3.format('.2f')(r.fund), d3.format('.2f')(r.benchmark)].forEach((t, i) => { const td = document.createElement('td'); td.textContent = t; if (i) td.className = 'n'; tr.append(td); });
+      tb.append(tr); });
+  });
+  dash.draw('rulesBody', (tb) => {
+    const d = dash.data('rules'); tb.replaceChildren(); if (d.status !== 'ok') return;
+    d.data.forEach((r) => { const tr = document.createElement('tr'); tr.dataset.key = r.rule;
+      [r.rule, r.limit].forEach((t) => { const td = document.createElement('td'); td.textContent = t; tr.append(td); }); tb.append(tr); });
+  });
+
+  // Risk
+  const fmtBy = (f, v) => v === null || v === undefined ? '—' : f === 'pct' ? d3.format('.2%')(v) : f === 'n' ? d3.format(',')(v) : d3.format('.2f')(v);
+  dash.draw('riskBody', (tb) => {
+    const d = dash.data('risk'); tb.replaceChildren(); if (d.status !== 'ok') return;
+    let grp = null;
+    d.data.forEach((r) => {
+      if (r.group !== grp) { grp = r.group; const g = document.createElement('tr'); g.className = 'gf-group'; const td = document.createElement('td'); td.colSpan = 4; td.textContent = grp; g.append(td); tb.append(g); }
+      const tr = document.createElement('tr'); tr.dataset.key = r.id;
+      const c = (t, cls) => { const td = document.createElement('td'); td.textContent = t; if (cls) td.className = cls; tr.append(td); };
+      c(r.metric); c(fmtBy(r.format, r.fund), 'n'); c(fmtBy(r.format, r.benchmark), 'n'); c(r.note || '', 'gf-thesis');
+      tb.append(tr);
+    });
+  });
+  dash.draw('riskCtryChart', (el) => {
+    const d = dash.data('risk_country');
+    if (d.status !== 'ok') { fail(el, d.status); return; }
+    el.replaceChildren();
+    const rows = d.data.map((r) => ({c: r.country, v: +r.te_share}));
+    const W = el.clientWidth || 500, bh = 22, gap = 12, m = {t: 8, r: 64, b: 8, l: 100};
+    const H = m.t + m.b + rows.length * (bh + gap);
+    const x = d3.scaleLinear([Math.min(0, d3.min(rows, (r) => r.v)), Math.max(0.1, d3.max(rows, (r) => r.v))], [m.l + 56, W - m.r]);
+    const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`);
+    svg.append('line').attr('x1', x(0)).attr('x2', x(0)).attr('y1', m.t).attr('y2', H - m.b).attr('stroke', 'var(--cds-chart-axis)');
+    rows.forEach((r, i) => {
+      const yy = m.t + i * (bh + gap);
+      svg.append('text').attr('x', m.l - 10).attr('y', yy + bh / 2).attr('dy', '0.35em').attr('text-anchor', 'end').attr('fill', 'var(--color-fg)').style('font-size', 'var(--cds-font-size-caption)').text(r.c);
+      svg.append('rect').attr('x', Math.min(x(0), x(r.v))).attr('y', yy).attr('width', Math.max(1, Math.abs(x(r.v) - x(0)))).attr('height', bh).attr('rx', 3).attr('fill', r.v < 0 ? 'var(--cds-chart-muted)' : 'var(--bb-blue)');
+      svg.append('text').attr('x', r.v < 0 ? x(r.v) - 6 : x(r.v) + 6).attr('y', yy + bh / 2).attr('dy', '0.35em').attr('text-anchor', r.v < 0 ? 'end' : 'start').attr('fill', 'var(--color-fg-muted)').style('font-size', 'var(--cds-font-size-caption)').text(d3.format('.0%')(r.v));
+    });
+  });
+  dash.draw('riskStockBody', (tb) => {
+    const d = dash.data('risk_stocks'); tb.replaceChildren(); if (d.status !== 'ok') return;
+    [...d.data].sort((a, b) => Math.abs(b.te_share) - Math.abs(a.te_share)).forEach((r) => {
+      const tr = document.createElement('tr'); tr.dataset.key = r.sym;
+      const c = (t, cls, v) => { const td = document.createElement('td'); td.textContent = t; if (cls) td.className = cls; if (v !== undefined) sign(td, v); tr.append(td); };
+      c(r.name); c(d3.format('+.1%')(r.active), 'n', r.active); c(d3.format('.0%')(r.vol), 'n'); c(d3.format('.2f')(r.beta), 'n');
+      c(d3.format('.1%')(r.te_share), 'n'); c(r.days_to_sell === null || r.days_to_sell === undefined ? '—' : d3.format('.1f')(r.days_to_sell), 'n' + (r.days_to_sell > 3 ? ' neg' : ''));
+      tb.append(tr);
+    });
+  });
+
+  // Horizons and checkpoints
+  dash.draw('horizonsBody', (tb) => {
+    const d = dash.data('horizons'); tb.replaceChildren(); if (d.status !== 'ok') return;
+    d.data.forEach((r) => { const tr = document.createElement('tr'); tr.dataset.key = r.layer;
+      [r.layer, r.horizon, r.what, r.changes].forEach((t, i) => { const td = document.createElement('td'); td.textContent = t; if (i > 1) td.className = 'gf-thesis'; tr.append(td); });
+      tb.append(tr); });
+  });
+  dash.draw('checkpointList', (el) => {
+    const d = dash.data('checkpoints');
+    if (d.status !== 'ok') { fail(el, d.status); return; }
+    el.replaceChildren();
+    const today = new Date(new Date().toISOString().slice(0, 10));
+    d.data.forEach((r) => {
+      const li = document.createElement('li'); const dt = new Date(r.date);
+      const w = document.createElement('div'); w.className = 'when' + (dt < today ? ' past' : ''); w.textContent = d3.utcFormat('%-d %b %Y')(dt);
+      const b = document.createElement('div'); b.className = 'body';
+      const h = document.createElement('h3'); h.textContent = r.event;
+      const m = document.createElement('p'); m.textContent = r.meaning;
+      const p = document.createElement('p'); p.className = 'gf-sub'; p.textContent = `Plan: ${r.plan}`;
+      b.append(h, m, p); li.append(w, b); el.append(li);
+    });
+  });
+
+  // Market commentary
+  dash.draw('outlookList', (el) => {
+    const d = dash.data('outlook');
+    if (d.status !== 'ok') { fail(el, d.status); return; }
+    el.replaceChildren();
+    const L = [['analysis', 'Analysis'], ['positioning', 'Fund stance'], ['risks', 'Risks'], ['watch', 'Watching']];
+    d.data.forEach((r, i) => {
+      const box = document.createElement('article'); box.className = 'gf-region' + (i === 0 ? ' wide' : '');
+      const top = document.createElement('div'); top.className = 'gf-region-top';
+      const h = document.createElement('h3'); h.textContent = r.region;
+      const st = document.createElement('span'); st.className = `gf-stance st-${r.stance}`; st.textContent = r.stance;
+      const dt0 = document.createElement('span'); dt0.className = 'gf-sub'; dt0.textContent = `as of ${d3.utcFormat('%-d %b %Y')(new Date(r.as_of))}`;
+      const hz = document.createElement('span'); hz.className = 'gf-pill'; hz.textContent = `Horizon: ${r.horizon || '—'}`;
+      top.append(h, st, hz, dt0);
+      const lede = document.createElement('p'); lede.className = 'gf-lede'; lede.textContent = r.headline;
+      const dl = document.createElement('dl');
+      L.forEach(([k, lab]) => { if (!r[k]) return; const a = document.createElement('dt'); a.textContent = lab; const b = document.createElement('dd'); b.textContent = r[k]; dl.append(a, b); });
+      box.append(top, lede, dl); el.append(box);
+    });
+  });
+  let ideaCountry = '';
+  document.querySelectorAll('.gf-chip').forEach((b) => b.addEventListener('click', () => {
+    ideaCountry = b.dataset.country;
+    document.querySelectorAll('.gf-chip').forEach((o) => o.setAttribute('aria-pressed', String(o.dataset.country === ideaCountry)));
+    dash.draw('ideasBody');
+  }));
+  dash.draw('ideasBody', (tb) => {
+    const d = dash.data('ideas'); tb.replaceChildren(); if (d.status !== 'ok') return;
+    d.data.filter((r) => !ideaCountry || r.country === ideaCountry).forEach((r) => {
+      const tr = document.createElement('tr'); tr.dataset.key = r.id;
+      const c1 = document.createElement('td'); c1.textContent = r.country;
+      const c2 = document.createElement('td'); c2.textContent = r.stock;
+      const c3 = document.createElement('td'); const s = document.createElement('span'); s.className = `gf-stance st-${r.view}`; s.textContent = r.view; c3.append(s);
+      const c4 = document.createElement('td'); c4.className = 'gf-thesis'; c4.textContent = r.why;
+      tr.append(c1, c2, c3, c4); tb.append(tr);
+    });
+  });
+  // Macro and news
+  const GOODUP = {tasi:1, adx:1, dfm:1, qe:1, kwp:1, kwa:1, spx:1, ndx:1, vix:-1, us10y:-1, us2y:-1};
+  const fmtLast = (r) => r.unit === 'yield' ? d3.format('.2f')(r.last) + '%' : d3.format(',.2f')(r.last);
+  const fmtChg = (r, v) => (v === null || v === undefined || v === '') ? '—' : (r.unit === 'yield' ? d3.format('+d')(v) + ' bp' : d3.format('+.1%')(v));
+  const tone = (el, r, v) => { const g = GOODUP[r.id] || 0; el.classList.toggle('pos', g * v > 0); el.classList.toggle('neg', g * v < 0); };
+  const boardRow = (id) => { const d = dash.data('macro_board'); return d.status === 'ok' ? d.data.find((r) => r.id === id) : null; };
+  const mt = (name, id, kind) => dash.draw(name, (el) => {
+    const r = boardRow(id); if (!r) { el.textContent = '—'; return; }
+    if (kind === 'last') el.textContent = fmtLast(r);
+    else { el.textContent = fmtChg(r, +r.chg_1w); tone(el, r, +r.chg_1w); }
+  });
+  mt('mTasi', 'tasi', 'last'); mt('mTasiW', 'tasi', 'w'); mt('mDfm', 'dfm', 'last'); mt('mDfmW', 'dfm', 'w');
+  mt('mBrent', 'brent', 'last'); mt('mBrentW', 'brent', 'w'); mt('mUs10', 'us10y', 'last'); mt('mUs10W', 'us10y', 'w');
+  dash.draw('macroAsof', (el) => { const r = boardRow('tasi'); el.textContent = r ? d3.utcFormat('%-d %b %Y')(new Date(r.as_of)) : '—'; });
+  dash.draw('mFed', (el) => { const d = dash.data('policy_rates'); const r = d.status === 'ok' ? d.data.find((x) => x.id === 'us') : null; el.textContent = r ? d3.format('.2f')(r.rate) + '%' : '—'; });
+
+  dash.draw('macroBody', (tb) => {
+    const d = dash.data('macro_board'); tb.replaceChildren();
+    if (d.status !== 'ok') { if (d.status === 'error') { const tr = document.createElement('tr'); const td = document.createElement('td'); td.colSpan = 8; td.className = 'gf-fail'; td.textContent = 'Failed to load'; tr.append(td); tb.append(tr); } return; }
+    let grp = null;
+    d.data.forEach((r) => {
+      if (r.group !== grp) { grp = r.group; const g = document.createElement('tr'); g.className = 'gf-group'; const td = document.createElement('td'); td.colSpan = 8; td.textContent = grp; g.append(td); tb.append(g); }
+      const tr = document.createElement('tr'); tr.dataset.key = r.id;
+      const c = (txt, cls) => { const td = document.createElement('td'); if (cls) td.className = cls; td.textContent = txt; tr.append(td); return td; };
+      c(r.name); c(fmtLast(r), 'n');
+      ['chg_1d', 'chg_1w', 'chg_1m', 'chg_ytd'].forEach((k) => { const td = c(fmtChg(r, +r[k]), 'n'); tone(td, r, +r[k]); });
+      c(d3.format('+.1%')(+r.vs_200d), 'n');
+      c(r.tech || '—', 'gf-thesis');
+      tb.append(tr);
+    });
+  });
+
+  const MINIS = [['tasi', 'Saudi Arabia (TASI)'], ['dfm', 'Dubai (DFMGI)'], ['adx', 'Abu Dhabi (FADGI)'], ['qe', 'Qatar (QE)'], ['kwp', 'Kuwait Premier'], ['brent', 'Brent ($/bbl)'], ['us10y', 'US 10-year yield (%)'], ['gold', 'Gold ($/oz)']];
+  dash.draw('macroMinis', (el) => {
+    const d = dash.data('macro_history');
+    if (d.status !== 'ok') { fail(el, d.status); return; }
+    el.replaceChildren();
+    const by = d3.group(d.data, (r) => r.series);
+    const cards = MINIS.filter(([k]) => by.has(k)).map(([k, label]) => {
+      const card = document.createElement('div'); card.className = 'gf-mini';
+      const top = document.createElement('div'); top.className = 'gf-mini-top';
+      const h = document.createElement('h3'); h.textContent = label;
+      const v = document.createElement('span'); v.className = 'gf-sub';
+      top.append(h, v);
+      const big = document.createElement('span'); big.className = 'gf-mini-val';
+      const plot = document.createElement('div'); plot.className = 'gf-mini-plot';
+      card.append(top, big, plot); el.append(card);
+      return {k, label, v, big, plot};
+    });
+    cards.forEach(({k, v, big, plot}) => {
+      const rows = by.get(k).map((r) => ({date: new Date(r.date), value: +r.value})).sort((a, b) => a.date - b.date);
+      const isY = k === 'us10y';
+      const first = rows[0].value, last = rows[rows.length - 1].value;
+      big.textContent = isY ? d3.format('.2f')(last) + '%' : d3.format(',.2f')(last);
+      v.textContent = '3 months ' + (isY ? d3.format('+d')(Math.round((last - first) * 100)) + ' bp' : d3.format('+.1%')(last / first - 1));
+      const W = plot.clientWidth || 240, H = 90, m = {t: 6, r: 16, b: 16, l: 16};
+      const x = d3.scaleUtc(d3.extent(rows, (r) => r.date), [m.l, W - m.r]);
+      const y = d3.scaleLinear(d3.extent(rows, (r) => r.value), [H - m.b, m.t]).nice();
+      const svg = d3.select(plot).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`).attr('role', 'img').attr('aria-label', `${k} over three months`);
+      svg.append('path').datum(rows).attr('fill', 'none').style('stroke', 'var(--bb-amber)').attr('stroke-width', 1.5).attr('d', d3.line((r) => x(r.date), (r) => y(r.value)));
+      const xa = svg.append('g').attr('transform', `translate(0,${H - m.b})`).call(d3.axisBottom(x).ticks(3).tickFormat(d3.utcFormat('%b')).tickSize(0).tickPadding(4)).attr('font-size', null).attr('font-family', null);
+      xa.select('.domain').attr('stroke', 'var(--cds-chart-axis)'); xa.selectAll('text').attr('fill', 'var(--color-fg-muted)').style('font-size', 'var(--cds-font-size-caption)');
+      const dot = svg.append('circle').attr('r', 3).style('fill', 'var(--bb-amber)').attr('opacity', 0);
+      const tip = document.createElement('div'); tip.className = 'gf-tip'; tip.hidden = true; plot.append(tip);
+      const bis = d3.bisector((r) => r.date).center;
+      svg.append('rect').attr('x', m.l).attr('y', 0).attr('width', W - m.l - m.r).attr('height', H).attr('fill', 'transparent')
+        .on('pointermove', (ev) => {
+          const [px] = d3.pointer(ev); const r = rows[bis(rows, x.invert(px))];
+          dot.attr('cx', x(r.date)).attr('cy', y(r.value)).attr('opacity', 1);
+          tip.hidden = false; tip.replaceChildren();
+          const a = document.createElement('div'); a.className = 'd'; a.textContent = d3.utcFormat('%-d %b %Y')(r.date);
+          const b = document.createElement('div'); b.textContent = isY ? d3.format('.2f')(r.value) + '%' : d3.format(',.2f')(r.value);
+          tip.append(a, b);
+          const sx = plot.clientWidth / W; let left = x(r.date) * sx + 8; if (left + tip.offsetWidth > plot.clientWidth) left = x(r.date) * sx - tip.offsetWidth - 8;
+          tip.style.left = Math.max(0, left) + 'px'; tip.style.top = '0px';
+        })
+        .on('pointerleave', () => { dot.attr('opacity', 0); tip.hidden = true; });
+    });
+  });
+
+  dash.draw('ratesBody', (tb) => {
+    const d = dash.data('policy_rates'); tb.replaceChildren(); if (d.status !== 'ok') return;
+    d.data.forEach((r) => {
+      const tr = document.createElement('tr'); tr.dataset.key = r.id;
+      const a = document.createElement('td'); const n = document.createElement('div'); n.textContent = r.bank; const s = document.createElement('div'); s.className = 'gf-sub'; s.textContent = r.label; a.append(n, s);
+      const b = document.createElement('td'); b.className = 'n'; b.textContent = d3.format('.2f')(r.rate) + '%';
+      const c = document.createElement('td'); c.textContent = r.last_move ? `${d3.format('+d')(r.move_bp)} bp on ${d3.utcFormat('%-d %b %Y')(new Date(r.last_move))}` : 'No change in 2026';
+      const e = document.createElement('td'); const e1 = document.createElement('div'); e1.textContent = r.next; const e2 = document.createElement('div'); e2.className = 'gf-sub'; e2.textContent = r.note; e.append(e1, e2);
+      tr.append(a, b, c, e); tb.append(tr);
+    });
+  });
+
+  dash.draw('calList', (el) => {
+    const d = dash.data('calendar'); el.replaceChildren(); if (d.status !== 'ok') return;
+    const today = d3.utcDay.floor(new Date());
+    d.data.slice().sort((a, b) => a.date < b.date ? -1 : 1).forEach((r) => {
+      const dt = new Date(r.date);
+      const li = document.createElement('li');
+      const w = document.createElement('div'); w.className = 'when' + (dt < today ? ' past' : ''); w.textContent = d3.utcFormat('%-d %b')(dt) + (r.firm ? '' : '*');
+      const b = document.createElement('div'); b.className = 'body';
+      const top = document.createElement('div'); top.className = 'gf-news-top';
+      const h = document.createElement('h3'); h.textContent = r.event;
+      const p = document.createElement('span'); p.className = 'gf-pill'; p.textContent = r.firm ? r.category : `${r.category} · expected`;
+      top.append(h, p);
+      const m = document.createElement('p'); m.textContent = r.why;
+      const s = document.createElement('p'); s.className = 'gf-sub'; s.textContent = `Watch: ${r.watch}`;
+      b.append(top, m, s); li.append(w, b); el.append(li);
+    });
+  });
+
+  let newsCat = '';
+  document.querySelectorAll('.gf-nchip').forEach((b) => b.addEventListener('click', () => {
+    newsCat = b.dataset.cat;
+    document.querySelectorAll('.gf-nchip').forEach((o) => o.setAttribute('aria-pressed', String(o.dataset.cat === newsCat)));
+    dash.draw('newsList');
+  }));
+  dash.draw('newsList', (el) => {
+    const d = dash.data('news');
+    if (d.status !== 'ok') { fail(el, d.status); return; }
+    el.replaceChildren();
+    const rows = d.data.filter((r) => !newsCat || r.category === newsCat).slice().sort((a, b) => a.date < b.date ? 1 : -1);
+    if (!rows.length) { const p = document.createElement('p'); p.className = 'gf-sub'; p.textContent = 'No news in this topic yet.'; el.append(p); return; }
+    rows.forEach((r) => {
+      const art = document.createElement('article');
+      const top = document.createElement('div'); top.className = 'gf-news-top';
+      const dt = document.createElement('span'); dt.className = 'gf-sub'; dt.textContent = d3.utcFormat('%-d %b %Y')(new Date(r.date));
+      const cat = document.createElement('span'); cat.className = 'gf-pill'; cat.textContent = r.category;
+      top.append(dt, cat);
+      const h = document.createElement('h3'); h.textContent = r.headline;
+      const p = document.createElement('p'); p.textContent = r.detail;
+      const imp = document.createElement('p'); imp.className = 'gf-impact'; const ib = document.createElement('b'); ib.textContent = 'For the fund: '; imp.append(ib, document.createTextNode(r.impact));
+      art.append(top, h, p, imp);
+      const src = document.createElement('p'); src.className = 'gf-sub';
+      if (r.url && /^https?:\/\//.test(r.url)) { const a = document.createElement('a'); a.href = r.url; a.target = '_blank'; a.rel = 'noopener'; a.textContent = r.source; src.append('Source: ', a); }
+      else src.textContent = `Source: ${r.source}`;
+      art.append(src); el.append(art);
+    });
+  });
+  // Index coverage
+  const cov = {q: '', ctry: '', view: '', basis: '', held: '', sort: 'index_w', dir: -1};
+  const covFiltered = () => {
+    const d = dash.data('index_coverage'); if (d.status !== 'ok') return null;
+    const q = cov.q.trim().toLowerCase();
+    const rows = d.data.filter((r) => (!cov.ctry || r.country === cov.ctry) && (!cov.view || r.view === cov.view) && (!cov.basis || r.basis === cov.basis) && (!cov.held || r.held === cov.held) && (!q || `${r.name} ${r.sector} ${r.sym}`.toLowerCase().includes(q)));
+    const k = cov.sort;
+    return rows.slice().sort((a, b) => { const x = a[k], y = b[k]; if (x === null || x === undefined) return 1; if (y === null || y === undefined) return -1; return (x - y) * cov.dir; });
+  };
+  const covRedraw = () => { dash.draw('covBody'); dash.draw('covCount'); };
+  document.querySelectorAll('#cov-q').forEach((el) => el.addEventListener('input', () => { cov.q = el.value; covRedraw(); }));
+  [['#cov-ctry', 'ctry'], ['#cov-view', 'view'], ['#cov-basis', 'basis'], ['#cov-held', 'held']].forEach(([sel, key]) => document.querySelectorAll(sel).forEach((el) => el.addEventListener('change', () => { cov[key] = el.value; covRedraw(); })));
+  document.querySelectorAll('.gf-cov .gf-csort').forEach((b) => b.addEventListener('click', () => {
+    const k = b.dataset.sort; cov.dir = cov.sort === k ? -cov.dir : -1; cov.sort = k;
+    document.querySelectorAll('.gf-cov .gf-csort').forEach((o) => { if (o.dataset.sort === k) o.setAttribute('aria-sort', cov.dir < 0 ? 'descending' : 'ascending'); else o.removeAttribute('aria-sort'); });
+    covRedraw();
+  }));
+  dash.draw('covCount', (el) => { const rows = covFiltered(); el.textContent = rows ? `${rows.length} of ${dash.data('index_coverage').data.length}` : '—'; });
+  dash.draw('covBody', (tb) => {
+    tb.replaceChildren(); const d = dash.data('index_coverage');
+    if (d.status !== 'ok') { if (d.status === 'error') { const tr = document.createElement('tr'); const td = document.createElement('td'); td.colSpan = 17; td.className = 'gf-fail'; td.textContent = 'Failed to load'; tr.append(td); tb.append(tr); } return; }
+    const p2 = d3.format('.2%'), sp2 = d3.format('+.2%'), s2 = d3.format('+.2f'), p1 = d3.format('+.1%');
+    covFiltered().forEach((r) => {
+      const tr = document.createElement('tr'); tr.dataset.key = r.sym;
+      const td = (txt, cls) => { const c = document.createElement('td'); if (cls) c.className = cls; if (txt !== undefined) c.textContent = txt; tr.append(c); return c; };
+      const a = td(undefined, 'gf-wrap'); const n1 = document.createElement('div'); n1.textContent = r.name; const n2 = document.createElement('div'); n2.className = 'gf-sub'; n2.textContent = r.held === 'Yes' ? `${r.sector} · held` : r.sector; a.append(n1, n2);
+      td(r.country);
+      td(p2(r.index_w), 'n'); td(r.fund_w ? p2(r.fund_w) : '—', 'n');
+      const ac = td(sp2(r.active), 'n'); ac.classList.toggle('pos', r.active > 0.0005); ac.classList.toggle('neg', r.active < -0.0005);
+      td(r.score === null ? '—' : s2(r.score), 'n');
+      td(r.pe === null ? '—' : d3.format('.1f')(r.pe) + 'x', 'n');
+      td(r.chg_1m === null ? '—' : p1(r.chg_1m), 'n');
+      td(r.q_end ? `Q${Math.ceil((new Date(r.q_end).getUTCMonth() + 1) / 3)} ${new Date(r.q_end).getUTCFullYear()}` : '—');
+      const mn = d3.format(',.0f'), gp = d3.format('+.0%');
+      td(r.rev_q === null || r.rev_q === undefined ? '—' : `${mn(r.rev_q)} ${r.ccy || ''}`.trim(), 'n');
+      ['rev_yoy', 'rev_qoq'].forEach((k) => { const v = r[k]; const c = td(v === null || v === undefined ? '—' : gp(v), 'n'); if (v !== null && v !== undefined) { c.classList.toggle('pos', v > 0); c.classList.toggle('neg', v < 0); } });
+      const ni = td(r.ni_q === null || r.ni_q === undefined ? '—' : `${mn(r.ni_q)} ${r.ccy || ''}`.trim(), 'n'); if (r.ni_flag === 'Loss') ni.classList.add('neg');
+      ['ni_yoy', 'ni_qoq'].forEach((k) => { const v = r[k]; const c = td(v === null || v === undefined ? (r.ni_flag === 'Loss' ? 'loss' : '—') : gp(v), 'n'); if (v !== null && v !== undefined) { c.classList.toggle('pos', v > 0); c.classList.toggle('neg', v < 0); } });
+      const v = td(); const s = document.createElement('span'); s.className = `gf-stance st-${r.view}`; s.textContent = r.view; const bsp = document.createElement('span'); bsp.className = 'gf-basis'; bsp.textContent = r.basis; v.append(s, bsp);
+      const nt = td(undefined, 'gf-wrap');
+      if (r.note) { const det = document.createElement('details'); const sm = document.createElement('summary'); sm.textContent = 'Why'; const p = document.createElement('p'); p.textContent = r.note; det.append(sm, p); nt.append(det); } else nt.textContent = '—';
+      tb.append(tr);
+    });
+  });
+})();
+</script>
+
+</div>
+</body>
+</html>
